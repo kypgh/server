@@ -1,0 +1,396 @@
+{
+  "info": {
+    "name": "Fitness Platform - Plan Management",
+    "description": "Test collection for Credit Plans and Subscription Plans",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "brandId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "creditPlanId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "subscriptionPlanId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth Setup",
+      "item": [
+        {
+          "name": "Brand Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.tokens.accessToken);",
+                  "    pm.collectionVariables.set('brandId', jsonData.data.brand._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@elitefitness.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/brand/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "brand", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Credit Plans",
+      "item": [
+        {
+          "name": "Create Credit Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credit plan created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.creditPlan).to.have.property('_id');",
+                  "    pm.collectionVariables.set('creditPlanId', jsonData.data.creditPlan._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"10 Class Pack\",\n  \"description\": \"Perfect for regular fitness enthusiasts\",\n  \"price\": 15000,\n  \"creditAmount\": 10,\n  \"validityPeriod\": 90,\n  \"bonusCredits\": 2,\n  \"includedClasses\": [],\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/credit-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "credit-plans"]
+            }
+          }
+        },
+        {
+          "name": "Get All Credit Plans",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credit plans retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.creditPlans).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/credit-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "credit-plans"]
+            }
+          }
+        },
+        {
+          "name": "Update Credit Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credit plan updated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bonusCredits\": 3,\n  \"validityPeriod\": 120\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/credit-plans/{{creditPlanId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "credit-plans", "{{creditPlanId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Credit Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Credit plan deactivated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.creditPlan.status).to.eql('inactive');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/credit-plans/{{creditPlanId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "credit-plans", "{{creditPlanId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription Plans",
+      "item": [
+        {
+          "name": "Create Subscription Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription plan created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.subscriptionPlan).to.have.property('_id');",
+                  "    pm.collectionVariables.set('subscriptionPlanId', jsonData.data.subscriptionPlan._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Monthly Unlimited\",\n  \"description\": \"Unlimited access to all classes\",\n  \"price\": 9900,\n  \"billingCycle\": \"monthly\",\n  \"includedClasses\": [],\n  \"frequencyLimit\": {\n    \"count\": 0,\n    \"period\": \"month\",\n    \"resetDay\": 1\n  },\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/subscription-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "subscription-plans"]
+            }
+          }
+        },
+        {
+          "name": "Get All Subscription Plans",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription plans retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.subscriptionPlans).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/subscription-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "subscription-plans"]
+            }
+          }
+        },
+        {
+          "name": "Update Subscription Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription plan updated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 11900,\n  \"description\": \"Updated: Unlimited access with premium support\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/subscription-plans/{{subscriptionPlanId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "subscription-plans", "{{subscriptionPlanId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Subscription Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription plan deactivated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.subscriptionPlan.status).to.eql('inactive');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/brand/subscription-plans/{{subscriptionPlanId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "brand", "subscription-plans", "{{subscriptionPlanId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

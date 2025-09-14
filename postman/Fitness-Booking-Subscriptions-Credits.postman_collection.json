@@ -1,0 +1,848 @@
+{
+	"info": {
+		"_postman_id": "fitness-booking-subscriptions-credits",
+		"name": "Fitness Booking - Subscriptions & Credits",
+		"description": "API collection for testing subscription and credit balance functionality",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Brand Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"brand@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/brand/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"brand",
+								"login"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('brandToken', response.token);",
+									"    pm.environment.set('brandId', response.brand._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Client Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/client/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"client",
+								"login"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('clientToken', response.token);",
+									"    pm.environment.set('clientId', response.client._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Subscription Management",
+			"item": [
+				{
+					"name": "Create Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subscriptionPlanId\": \"{{subscriptionPlanId}}\",\n  \"paymentMethodId\": \"pm_card_visa\",\n  \"autoRenew\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"subscriptions"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('subscriptionId', response.subscription._id);",
+									"    pm.environment.set('paymentIntentId', response.paymentIntent.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Client Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"subscriptions"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Subscription Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/subscriptions/{{subscriptionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"subscriptions",
+								"{{subscriptionId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"No longer needed\",\n  \"cancelAtPeriodEnd\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/subscriptions/{{subscriptionId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"subscriptions",
+								"{{subscriptionId}}",
+								"cancel"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Credit Balance Management",
+			"item": [
+				{
+					"name": "Purchase Credits",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"creditPlanId\": \"{{creditPlanId}}\",\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/credits/purchase",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"credits",
+								"purchase"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('creditBalanceId', response.creditBalance._id);",
+									"    pm.environment.set('creditPaymentIntentId', response.paymentIntent.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Credit Balance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/credits/balance/{{brandId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"credits",
+								"balance",
+								"{{brandId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Credit History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/credits/history/{{brandId}}?limit=20&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"credits",
+								"history",
+								"{{brandId}}"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Check Credits for Class",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/credits/available/{{classId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"credits",
+								"available",
+								"{{classId}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Payment Processing",
+			"item": [
+				{
+					"name": "Get Payment Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/payments/{{paymentIntentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"payments",
+								"{{paymentIntentId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Payment History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/client/payments?limit=20&offset=0&type=subscription",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "type",
+									"value": "subscription"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Request Refund",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 5000,\n  \"reason\": \"Customer request\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/payments/{{paymentIntentId}}/refund",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"payments",
+								"{{paymentIntentId}}",
+								"refund"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Booking with Credits/Subscription",
+			"item": [
+				{
+					"name": "Book Class with Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"paymentMethod\": \"subscription\",\n  \"subscriptionId\": \"{{subscriptionId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"bookings"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('bookingId', response.booking._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Book Class with Credits",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"paymentMethod\": \"credits\",\n  \"creditsToUse\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"bookings"
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Booking (Credit Refund)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{clientToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Schedule conflict\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/client/bookings/{{bookingId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"client",
+								"bookings",
+								"{{bookingId}}",
+								"cancel"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Brand Analytics",
+			"item": [
+				{
+					"name": "Get Subscription Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{brandToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/brand/analytics/subscriptions?startDate=2024-01-01&endDate=2024-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"brand",
+								"analytics",
+								"subscriptions"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Payment Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{brandToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/brand/analytics/payments?startDate=2024-01-01&endDate=2024-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"brand",
+								"analytics",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Credit Usage Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{brandToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/brand/analytics/credits?startDate=2024-01-01&endDate=2024-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"brand",
+								"analytics",
+								"credits"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Webhook Simulation",
+			"item": [
+				{
+					"name": "Stripe Payment Success Webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Stripe-Signature",
+								"value": "test_signature"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"evt_test_webhook\",\n  \"object\": \"event\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{paymentIntentId}}\",\n      \"object\": \"payment_intent\",\n      \"status\": \"succeeded\",\n      \"amount\": 9900,\n      \"currency\": \"usd\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/webhooks/stripe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"webhooks",
+								"stripe"
+							]
+						}
+					}
+				},
+				{
+					"name": "Stripe Payment Failed Webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Stripe-Signature",
+								"value": "test_signature"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"evt_test_webhook_failed\",\n  \"object\": \"event\",\n  \"type\": \"payment_intent.payment_failed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{paymentIntentId}}\",\n      \"object\": \"payment_intent\",\n      \"status\": \"requires_payment_method\",\n      \"amount\": 9900,\n      \"currency\": \"usd\",\n      \"last_payment_error\": {\n        \"message\": \"Your card was declined.\"\n      }\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/webhooks/stripe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"webhooks",
+								"stripe"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "brandToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "clientToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "brandId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "subscriptionPlanId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "creditPlanId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "subscriptionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "creditBalanceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "paymentIntentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "creditPaymentIntentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "classId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sessionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "bookingId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
