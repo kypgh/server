@@ -205,6 +205,91 @@ export class StripeController {
   }
 
   /**
+   * Delete Stripe Connect account for the authenticated brand
+   */
+  async deleteConnectAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const brandId = req.user?.id;
+      
+      if (!brandId) {
+        res.status(401).json({
+          success: false,
+          error: {
+            code: 'AUTH_003',
+            message: 'Unauthorized access'
+          }
+        });
+        return;
+      }
+
+      // Get brand information
+      const brand = await Brand.findById(brandId);
+      if (!brand) {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'BRAND_001',
+            message: 'Brand not found'
+          }
+        });
+        return;
+      }
+
+      // Check if brand has Stripe account
+      if (!brand.stripeConnectAccountId) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'STRIPE_004',
+            message: 'No Stripe account to delete'
+          }
+        });
+        return;
+      }
+
+      // Delete the Stripe account
+      const deleteResult = await stripeService.deleteConnectAccount(brand.stripeConnectAccountId);
+
+      // Clear the Stripe account info from brand
+      await Brand.findByIdAndUpdate(brandId, {
+        stripeConnectAccountId: null,
+        stripeOnboardingComplete: false,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          deleted: deleteResult.deleted,
+          accountId: deleteResult.accountId,
+          message: 'Stripe Connect account deleted successfully'
+        }
+      });
+    } catch (error) {
+      console.error('Error in deleteConnectAccount:', error);
+      
+      // Handle specific Stripe errors
+      if (error.message.includes('No such account')) {
+        // Account doesn't exist in Stripe, just clear from database
+        await Brand.findByIdAndUpdate(req.user?.id, {
+          stripeConnectAccountId: null,
+          stripeOnboardingComplete: false,
+        });
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            deleted: true,
+            message: 'Account reference cleared (account not found in Stripe)'
+          }
+        });
+        return;
+      }
+      
+      next(error);
+    }
+  }
+
+  /**
    * Handle Stripe onboarding success callback
    */
   async onboardingSuccess(req: Request, res: Response, next: NextFunction): Promise<void> {

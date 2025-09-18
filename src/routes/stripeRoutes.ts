@@ -27,6 +27,13 @@ router.get('/account-status', AuthMiddleware.brandAuth, stripeController.getAcco
 router.post('/refresh-status', AuthMiddleware.brandAuth, stripeController.refreshOnboardingStatus);
 
 /**
+ * @route   DELETE /api/brand/stripe/account
+ * @desc    Delete Stripe Connect account for the authenticated brand
+ * @access  Private (Brand only)
+ */
+router.delete('/account', AuthMiddleware.brandAuth, stripeController.deleteConnectAccount);
+
+/**
  * @route   GET /api/brand/stripe/success
  * @desc    Stripe onboarding success callback
  * @access  Public (Stripe callback)

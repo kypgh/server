@@ -1,6 +1,6 @@
-import Stripe from 'stripe';
-import config from '../config/environment';
-import { Brand } from '../models/Brand';
+import Stripe from "stripe";
+import config from "../config/environment";
+import { Brand } from "../models/Brand";
 
 export interface StripeAccountStatus {
   accountId: string | null;
@@ -22,25 +22,29 @@ class StripeService {
 
   constructor() {
     if (!config.stripe.secretKey) {
-      throw new Error('Stripe secret key is required');
+      throw new Error("Stripe secret key is required");
     }
-    
+
     this.stripe = new Stripe(config.stripe.secretKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: "2023-10-16",
     });
   }
 
   /**
    * Create a Stripe Connect account for a brand
    */
-  async createConnectAccount(brandId: string, email: string, businessName: string): Promise<StripeConnectResponse> {
+  async createConnectAccount(
+    brandId: string,
+    email: string,
+    businessName: string
+  ): Promise<StripeConnectResponse> {
     try {
-      // Create Stripe Connect account
+      // Create Stripe Connect account (Cyprus configuration)
       const account = await this.stripe.accounts.create({
-        type: 'express',
-        country: 'US',
+        type: "express",
+        country: "CY", // Cyprus
         email: email,
-        business_type: 'company',
+        business_type: "company",
         company: {
           name: businessName,
         },
@@ -51,7 +55,7 @@ class StripeService {
         settings: {
           payouts: {
             schedule: {
-              interval: 'daily',
+              interval: "daily",
             },
           },
         },
@@ -66,9 +70,13 @@ class StripeService {
       // Create onboarding link
       const accountLink = await this.stripe.accountLinks.create({
         account: account.id,
-        refresh_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/brand/stripe/refresh`,
-        return_url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/brand/stripe/success?account=${account.id}`,
-        type: 'account_onboarding',
+        refresh_url: `${
+          process.env.FRONTEND_URL || "http://localhost:3000"
+        }/brand/stripe/refresh`,
+        return_url: `${
+          process.env.BACKEND_URL || "http://localhost:3001"
+        }/api/brand/stripe/success?account=${account.id}`,
+        type: "account_onboarding",
       });
 
       return {
@@ -76,8 +84,8 @@ class StripeService {
         onboardingUrl: accountLink.url,
       };
     } catch (error) {
-      console.error('Error creating Stripe Connect account:', error);
-      throw new Error('Failed to create Stripe Connect account');
+      console.error("Error creating Stripe Connect account:", error);
+      throw new Error("Failed to create Stripe Connect account");
     }
   }
 
@@ -90,7 +98,8 @@ class StripeService {
 
       const status: StripeAccountStatus = {
         accountId: account.id,
-        onboardingComplete: account.details_submitted && account.charges_enabled,
+        onboardingComplete:
+          account.details_submitted && account.charges_enabled,
         chargesEnabled: account.charges_enabled,
         payoutsEnabled: account.payouts_enabled,
         detailsSubmitted: account.details_submitted,
@@ -100,38 +109,45 @@ class StripeService {
       // Check if account requires additional action
       if (!account.details_submitted || !account.charges_enabled) {
         status.requiresAction = true;
-        
+
         // Create new onboarding link if needed
         const accountLink = await this.stripe.accountLinks.create({
           account: account.id,
-          refresh_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/brand/stripe/refresh`,
-          return_url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/brand/stripe/success?account=${account.id}`,
-          type: 'account_onboarding',
+          refresh_url: `${
+            process.env.FRONTEND_URL || "http://localhost:3000"
+          }/brand/stripe/refresh`,
+          return_url: `${
+            process.env.BACKEND_URL || "http://localhost:3001"
+          }/api/brand/stripe/success?account=${account.id}`,
+          type: "account_onboarding",
         });
-        
+
         status.actionUrl = accountLink.url;
       }
 
       return status;
     } catch (error) {
-      console.error('Error retrieving Stripe account status:', error);
-      throw new Error('Failed to retrieve Stripe account status');
+      console.error("Error retrieving Stripe account status:", error);
+      throw new Error("Failed to retrieve Stripe account status");
     }
   }
 
   /**
    * Update brand onboarding status based on Stripe account
    */
-  async updateBrandOnboardingStatus(brandId: string, accountId: string): Promise<void> {
+  async updateBrandOnboardingStatus(
+    brandId: string,
+    accountId: string
+  ): Promise<void> {
     try {
       const accountStatus = await this.getAccountStatus(accountId);
-      
+
       await Brand.findByIdAndUpdate(brandId, {
         stripeOnboardingComplete: accountStatus.onboardingComplete,
       });
     } catch (error) {
-      console.error('Error updating brand onboarding status:', error);
-      throw new Error('Failed to update brand onboarding status');
+      console.error("Error updating brand onboarding status:", error);
+      throw new Error("Failed to update brand onboarding status");
     }
   }
 
@@ -143,7 +159,7 @@ class StripeService {
       const account = await this.stripe.accounts.retrieve(accountId);
       return account.charges_enabled && account.details_submitted;
     } catch (error) {
-      console.error('Error validating payment capability:', error);
+      console.error("Error validating payment capability:", error);
       return false;
     }
   }
@@ -167,8 +183,30 @@ class StripeService {
         },
       });
     } catch (error) {
-      console.error('Error creating payment intent:', error);
-      throw new Error('Failed to create payment intent');
+      console.error("Error creating payment intent:", error);
+      throw new Error("Failed to create payment intent");
+    }
+  }
+
+  /**
+   * Delete a Stripe Connect account
+   */
+  async deleteConnectAccount(
+    accountId: string
+  ): Promise<{ deleted: boolean; accountId: string }> {
+    try {
+      const deleted = await this.stripe.accounts.del(accountId);
+      return {
+        deleted: deleted.deleted || false,
+        accountId: deleted.id,
+      };
+    } catch (error) {
+      console.error("Error deleting Stripe Connect account:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      throw new Error(
+        `Failed to delete Stripe Connect account: ${errorMessage}`
+      );
     }
   }
 
