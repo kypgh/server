@@ -109,7 +109,6 @@
 
 - [x] 13. Create payment processing system
 
-
   - Implement Stripe PaymentIntent creation for subscription purchases
   - Implement Stripe PaymentIntent creation for credit plan purchases
   - Create payment confirmation endpoints for client-side payment completion
@@ -117,7 +116,7 @@
   - Write unit tests for payment processing logic
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 14. Implement subscription management for clients
+- [x] 14. Implement subscription management for clients
 
   - Create subscription purchase endpoint with Stripe payment integration
   - Create subscription listing endpoint for client's active subscriptions
@@ -126,7 +125,7 @@
   - Write integration tests for subscription management flow
   - _Requirements: 9.1, 9.2, 12.1, 12.3, 12.5_
 
-- [ ] 15. Implement credit management system
+- [x] 15. Implement credit management system
 
   - Create credit plan purchase endpoint with balance creation
   - Implement FIFO credit deduction algorithm for oldest packages first

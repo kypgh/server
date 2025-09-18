@@ -1,6 +1,9 @@
 import App from './app';
 import DatabaseConnection from './config/database';
 import config from './config/environment';
+import CreditCleanupService from './services/CreditCleanupService';
+import SessionGeneratorService from './services/SessionGeneratorService';
+import SessionSchedulerService from './services/SessionSchedulerService';
 
 class Server {
   private app: App;
@@ -15,6 +18,22 @@ class Server {
     try {
       // Connect to database
       await this.database.connect();
+
+      // Generate sessions for the next 2 weeks if none exist
+      await SessionGeneratorService.generateSessions({ weeksAhead: 2, skipExisting: true });
+      
+      // Log session generation stats
+      const stats = await SessionGeneratorService.getGenerationStats();
+      if (stats) {
+        console.log(`📊 Session Generation Stats:`);
+        console.log(`   - Total sessions in DB: ${stats.totalSessions}`);
+        console.log(`   - Future sessions (next 2 weeks): ${stats.futureSessions}`);
+        console.log(`   - Active classes: ${stats.activeClasses}`);
+      }
+
+      // Start background services
+      CreditCleanupService.startCleanupService();
+      SessionSchedulerService.startSessionGeneration();
 
       // Start the server
       const server = this.app.getApp().listen(config.port, () => {
@@ -32,6 +51,11 @@ class Server {
           console.log('✅ HTTP server closed');
           
           try {
+            // Stop background services
+            CreditCleanupService.stopCleanupService();
+            SessionSchedulerService.stopSessionGeneration();
+            console.log('✅ Background services stopped');
+            
             await this.database.disconnect();
             console.log('✅ Database connection closed');
             console.log('✅ Graceful shutdown completed');

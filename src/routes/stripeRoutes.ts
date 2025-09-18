@@ -26,4 +26,11 @@ router.get('/account-status', AuthMiddleware.brandAuth, stripeController.getAcco
  */
 router.post('/refresh-status', AuthMiddleware.brandAuth, stripeController.refreshOnboardingStatus);
 
+/**
+ * @route   GET /api/brand/stripe/success
+ * @desc    Stripe onboarding success callback
+ * @access  Public (Stripe callback)
+ */
+router.get('/success', stripeController.onboardingSuccess);
+
 export default router;

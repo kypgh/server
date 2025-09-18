@@ -203,6 +203,49 @@ export class StripeController {
       next(error);
     }
   }
+
+  /**
+   * Handle Stripe onboarding success callback
+   */
+  async onboardingSuccess(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Get the account ID from query parameters (Stripe should include this)
+      const accountId = req.query.account as string;
+      
+      if (!accountId) {
+        console.error('No account ID provided in success callback');
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?stripe_error=missing_account`);
+      }
+
+      // Find the brand with this Stripe account ID
+      const brand = await Brand.findOne({ stripeConnectAccountId: accountId });
+      
+      if (!brand) {
+        console.error('No brand found for Stripe account:', accountId);
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?stripe_error=brand_not_found`);
+      }
+
+      // Verify the onboarding status with Stripe
+      const accountStatus = await stripeService.getAccountStatus(accountId);
+      
+      // Update the brand's onboarding status
+      await Brand.findByIdAndUpdate(brand._id, {
+        stripeOnboardingComplete: accountStatus.onboardingComplete,
+      });
+
+      // Redirect to frontend with success status
+      const redirectUrl = accountStatus.onboardingComplete 
+        ? `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?stripe_success=true`
+        : `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?stripe_success=false&requires_action=true`;
+
+      res.redirect(redirectUrl);
+      
+    } catch (error) {
+      console.error('Error in onboardingSuccess:', error);
+      // Redirect to frontend with error
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?stripe_error=callback_failed`);
+    }
+  }
 }
 
 export default new StripeController();

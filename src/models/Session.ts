@@ -126,7 +126,7 @@ const SessionSchema = new Schema<ISession>({
 });
 
 // Indexes
-SessionSchema.index({ class: 1, dateTime: 1 });
+SessionSchema.index({ class: 1, dateTime: 1 }, { unique: true }); // Prevent duplicate sessions
 SessionSchema.index({ dateTime: 1, status: 1 });
 SessionSchema.index({ status: 1 });
 SessionSchema.index({ 'attendees.client': 1 });

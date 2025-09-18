@@ -67,7 +67,7 @@ class StripeService {
       const accountLink = await this.stripe.accountLinks.create({
         account: account.id,
         refresh_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/brand/stripe/refresh`,
-        return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/brand/stripe/success`,
+        return_url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/brand/stripe/success?account=${account.id}`,
         type: 'account_onboarding',
       });
 
@@ -105,7 +105,7 @@ class StripeService {
         const accountLink = await this.stripe.accountLinks.create({
           account: account.id,
           refresh_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/brand/stripe/refresh`,
-          return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/brand/stripe/success`,
+          return_url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/brand/stripe/success?account=${account.id}`,
           type: 'account_onboarding',
         });
         

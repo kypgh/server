@@ -40,6 +40,7 @@ class ClientProfileController {
 
       // Find client by ID
       const client = await Client.findById(clientId);
+      
       if (!client) {
         res.status(404).json({
           success: false,

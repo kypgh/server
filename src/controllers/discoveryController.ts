@@ -1,32 +1,32 @@
-import { Request, Response } from 'express';
-import { Brand } from '../models/Brand';
-import { Class } from '../models/Class';
-import { Session } from '../models/Session';
-import { SubscriptionPlan } from '../models/SubscriptionPlan';
-import { CreditPlan } from '../models/CreditPlan';
-import { 
-  brandDiscoverySchema, 
-  classDiscoverySchema, 
+import { Request, Response } from "express";
+import { Brand } from "../models/Brand";
+import { Class } from "../models/Class";
+import { Session } from "../models/Session";
+import { SubscriptionPlan } from "../models/SubscriptionPlan";
+import { CreditPlan } from "../models/CreditPlan";
+import {
+  brandDiscoverySchema,
+  classDiscoverySchema,
   sessionDiscoverySchema,
-  brandIdParamSchema 
-} from '../validation/discovery';
-import mongoose from 'mongoose';
+  brandIdParamSchema,
+} from "../validation/discovery";
+import mongoose from "mongoose";
 
 interface BrandDiscoveryQuery {
   search?: string;
   city?: string;
   state?: string;
-  status?: 'active' | 'inactive';
+  status?: "active" | "inactive";
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 interface ClassDiscoveryQuery {
   search?: string;
   category?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   brand?: string;
   city?: string;
   state?: string;
@@ -35,7 +35,7 @@ interface ClassDiscoveryQuery {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 interface SessionDiscoveryQuery {
@@ -43,7 +43,7 @@ interface SessionDiscoveryQuery {
   brand?: string;
   class?: string;
   category?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   startDate?: Date;
   endDate?: Date;
   availableOnly?: boolean;
@@ -52,7 +52,7 @@ interface SessionDiscoveryQuery {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 class DiscoveryController {
@@ -63,22 +63,22 @@ class DiscoveryController {
   public static async getBrands(req: Request, res: Response): Promise<void> {
     try {
       // Validate query parameters
-      const { error, value } = brandDiscoverySchema.validate(req.query, { 
+      const { error, value } = brandDiscoverySchema.validate(req.query, {
         abortEarly: false,
-        stripUnknown: true 
+        stripUnknown: true,
       });
 
       if (error) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'VALIDATION_001',
-            message: 'Invalid query parameters',
-            details: error.details.map(detail => ({
-              field: detail.path.join('.'),
-              message: detail.message
-            }))
-          }
+            code: "VALIDATION_001",
+            message: "Invalid query parameters",
+            details: error.details.map((detail) => ({
+              field: detail.path.join("."),
+              message: detail.message,
+            })),
+          },
         });
         return;
       }
@@ -86,26 +86,26 @@ class DiscoveryController {
       const queryParams: BrandDiscoveryQuery = value;
 
       // Build filter object
-      const filter: any = { status: queryParams.status || 'active' };
+      const filter: any = { status: queryParams.status || "active" };
 
       if (queryParams.search) {
         filter.$or = [
-          { name: { $regex: queryParams.search, $options: 'i' } },
-          { description: { $regex: queryParams.search, $options: 'i' } }
+          { name: { $regex: queryParams.search, $options: "i" } },
+          { description: { $regex: queryParams.search, $options: "i" } },
         ];
       }
 
       if (queryParams.city) {
-        filter['address.city'] = { $regex: queryParams.city, $options: 'i' };
+        filter["address.city"] = { $regex: queryParams.city, $options: "i" };
       }
 
       if (queryParams.state) {
-        filter['address.state'] = { $regex: queryParams.state, $options: 'i' };
+        filter["address.state"] = { $regex: queryParams.state, $options: "i" };
       }
 
       // Build sort object
-      const sortField = queryParams.sortBy || 'name';
-      const sortOrder = queryParams.sortOrder === 'desc' ? -1 : 1;
+      const sortField = queryParams.sortBy || "name";
+      const sortOrder = queryParams.sortOrder === "desc" ? -1 : 1;
       const sort: { [key: string]: 1 | -1 } = { [sortField]: sortOrder };
 
       // Calculate pagination
@@ -116,12 +116,12 @@ class DiscoveryController {
       // Execute query with pagination
       const [brands, totalCount] = await Promise.all([
         Brand.find(filter)
-          .select('-password -stripeConnectAccountId') // Exclude sensitive fields
+          .select("-password -stripeConnectAccountId") // Exclude sensitive fields
           .sort(sort)
           .skip(skip)
           .limit(limit)
           .lean(),
-        Brand.countDocuments(filter)
+        Brand.countDocuments(filter),
       ]);
 
       // Calculate pagination metadata
@@ -139,20 +139,19 @@ class DiscoveryController {
             totalCount,
             limit,
             hasNextPage,
-            hasPrevPage
-          }
+            hasPrevPage,
+          },
         },
-        message: 'Brands retrieved successfully'
+        message: "Brands retrieved successfully",
       });
-
     } catch (error) {
-      console.error('Get brands error:', error);
+      console.error("Get brands error:", error);
       res.status(500).json({
         success: false,
         error: {
-          code: 'SERVER_001',
-          message: 'Internal server error'
-        }
+          code: "SERVER_001",
+          message: "Internal server error",
+        },
       });
     }
   }
@@ -164,22 +163,23 @@ class DiscoveryController {
   public static async getBrandById(req: Request, res: Response): Promise<void> {
     try {
       // Validate brand ID parameter
-      const { error: paramError, value: paramValue } = brandIdParamSchema.validate(req.params, { 
-        abortEarly: false,
-        stripUnknown: true 
-      });
+      const { error: paramError, value: paramValue } =
+        brandIdParamSchema.validate(req.params, {
+          abortEarly: false,
+          stripUnknown: true,
+        });
 
       if (paramError) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'VALIDATION_001',
-            message: 'Invalid brand ID',
-            details: paramError.details.map(detail => ({
-              field: detail.path.join('.'),
-              message: detail.message
-            }))
-          }
+            code: "VALIDATION_001",
+            message: "Invalid brand ID",
+            details: paramError.details.map((detail) => ({
+              field: detail.path.join("."),
+              message: detail.message,
+            })),
+          },
         });
         return;
       }
@@ -187,77 +187,84 @@ class DiscoveryController {
       const { brandId } = paramValue;
 
       // Find brand with active status
-      const brand = await Brand.findOne({ 
-        _id: brandId, 
-        status: 'active' 
+      const brand = await Brand.findOne({
+        _id: brandId,
+        status: "active",
       })
-      .select('-password -stripeConnectAccountId') // Exclude sensitive fields
-      .lean();
+        .select("-password -stripeConnectAccountId") // Exclude sensitive fields
+        .lean();
 
       if (!brand) {
         res.status(404).json({
           success: false,
           error: {
-            code: 'BRAND_001',
-            message: 'Brand not found or inactive'
-          }
+            code: "BRAND_001",
+            message: "Brand not found or inactive",
+          },
         });
         return;
       }
 
       // Get active classes for this brand
-      const classes = await Class.find({ 
-        brand: brandId, 
-        status: 'active' 
+      const classes = await Class.find({
+        brand: brandId,
+        status: "active",
       })
-      .select('name description category difficulty slots duration timeBlocks')
-      .sort({ name: 1 })
-      .lean();
+        .select(
+          "name description category difficulty slots duration timeBlocks"
+        )
+        .sort({ name: 1 })
+        .lean();
 
       // Get class statistics
       const classStats = await Class.aggregate([
-        { $match: { brand: new mongoose.Types.ObjectId(brandId), status: 'active' } },
+        {
+          $match: {
+            brand: new mongoose.Types.ObjectId(brandId),
+            status: "active",
+          },
+        },
         {
           $group: {
             _id: null,
             totalClasses: { $sum: 1 },
-            categories: { $addToSet: '$category' },
-            difficulties: { $push: '$difficulty' }
-          }
+            categories: { $addToSet: "$category" },
+            difficulties: { $push: "$difficulty" },
+          },
         },
         {
           $project: {
             _id: 0,
             totalClasses: 1,
-            uniqueCategories: { $size: '$categories' },
+            uniqueCategories: { $size: "$categories" },
             difficultyDistribution: {
               beginner: {
                 $size: {
                   $filter: {
-                    input: '$difficulties',
-                    cond: { $eq: ['$$this', 'beginner'] }
-                  }
-                }
+                    input: "$difficulties",
+                    cond: { $eq: ["$$this", "beginner"] },
+                  },
+                },
               },
               intermediate: {
                 $size: {
                   $filter: {
-                    input: '$difficulties',
-                    cond: { $eq: ['$$this', 'intermediate'] }
-                  }
-                }
+                    input: "$difficulties",
+                    cond: { $eq: ["$$this", "intermediate"] },
+                  },
+                },
               },
               advanced: {
                 $size: {
                   $filter: {
-                    input: '$difficulties',
-                    cond: { $eq: ['$$this', 'advanced'] }
-                  }
-                }
-              }
-            }
-          }
-        }
+                    input: "$difficulties",
+                    cond: { $eq: ["$$this", "advanced"] },
+                  },
+                },
+              },
+            },
+          },
+        },
       ]);
 
       const stats = classStats[0] || {
@@ -266,8 +273,8 @@ class DiscoveryController {
         difficultyDistribution: {
           beginner: 0,
           intermediate: 0,
-          advanced: 0
-        }
+          advanced: 0,
+        },
       };
 
       res.status(200).json({
@@ -275,19 +282,18 @@ class DiscoveryController {
         data: {
           brand,
           classes,
-          stats
+          stats,
         },
-        message: 'Brand details retrieved successfully'
+        message: "Brand details retrieved successfully",
       });
-
     } catch (error) {
-      console.error('Get brand by ID error:', error);
+      console.error("Get brand by ID error:", error);
       res.status(500).json({
         success: false,
         error: {
-          code: 'SERVER_001',
-          message: 'Internal server error'
-        }
+          code: "SERVER_001",
+          message: "Internal server error",
+        },
       });
     }
   }
@@ -299,22 +305,22 @@ class DiscoveryController {
   public static async getClasses(req: Request, res: Response): Promise<void> {
     try {
       // Validate query parameters
-      const { error, value } = classDiscoverySchema.validate(req.query, { 
+      const { error, value } = classDiscoverySchema.validate(req.query, {
         abortEarly: false,
-        stripUnknown: true 
+        stripUnknown: true,
       });
 
       if (error) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'VALIDATION_001',
-            message: 'Invalid query parameters',
-            details: error.details.map(detail => ({
-              field: detail.path.join('.'),
-              message: detail.message
-            }))
-          }
+            code: "VALIDATION_001",
+            message: "Invalid query parameters",
+            details: error.details.map((detail) => ({
+              field: detail.path.join("."),
+              message: detail.message,
+            })),
+          },
         });
         return;
       }
@@ -324,27 +330,27 @@ class DiscoveryController {
       // Build aggregation pipeline
       const pipeline: any[] = [
         // Match active classes only
-        { $match: { status: 'active' } },
-        
+        { $match: { status: "active" } },
+
         // Lookup brand information
         {
           $lookup: {
-            from: 'brands',
-            localField: 'brand',
-            foreignField: '_id',
-            as: 'brandInfo',
+            from: "brands",
+            localField: "brand",
+            foreignField: "_id",
+            as: "brandInfo",
             pipeline: [
-              { $match: { status: 'active' } },
-              { $project: { name: 1, address: 1, logo: 1 } }
-            ]
-          }
+              { $match: { status: "active" } },
+              { $project: { name: 1, address: 1, logo: 1 } },
+            ],
+          },
         },
-        
+
         // Ensure brand exists and is active
         { $match: { brandInfo: { $ne: [] } } },
-        
+
         // Unwind brand info
-        { $unwind: '$brandInfo' }
+        { $unwind: "$brandInfo" },
       ];
 
       // Add filters
@@ -373,19 +379,25 @@ class DiscoveryController {
       }
 
       if (queryParams.city) {
-        matchConditions['brandInfo.address.city'] = { $regex: queryParams.city, $options: 'i' };
+        matchConditions["brandInfo.address.city"] = {
+          $regex: queryParams.city,
+          $options: "i",
+        };
       }
 
       if (queryParams.state) {
-        matchConditions['brandInfo.address.state'] = { $regex: queryParams.state, $options: 'i' };
+        matchConditions["brandInfo.address.state"] = {
+          $regex: queryParams.state,
+          $options: "i",
+        };
       }
 
       if (queryParams.search) {
         matchConditions.$or = [
-          { name: { $regex: queryParams.search, $options: 'i' } },
-          { description: { $regex: queryParams.search, $options: 'i' } },
-          { category: { $regex: queryParams.search, $options: 'i' } },
-          { 'brandInfo.name': { $regex: queryParams.search, $options: 'i' } }
+          { name: { $regex: queryParams.search, $options: "i" } },
+          { description: { $regex: queryParams.search, $options: "i" } },
+          { category: { $regex: queryParams.search, $options: "i" } },
+          { "brandInfo.name": { $regex: queryParams.search, $options: "i" } },
         ];
       }
 
@@ -394,8 +406,8 @@ class DiscoveryController {
       }
 
       // Add sorting
-      const sortField = queryParams.sortBy || 'name';
-      const sortOrder = queryParams.sortOrder === 'desc' ? -1 : 1;
+      const sortField = queryParams.sortBy || "name";
+      const sortOrder = queryParams.sortOrder === "desc" ? -1 : 1;
       pipeline.push({ $sort: { [sortField]: sortOrder } });
 
       // Calculate pagination
@@ -419,32 +431,35 @@ class DiscoveryController {
           timeBlocks: 1,
           createdAt: 1,
           brand: {
-            _id: '$brandInfo._id',
-            name: '$brandInfo.name',
-            logo: '$brandInfo.logo',
-            city: '$brandInfo.address.city',
-            state: '$brandInfo.address.state'
-          }
-        }
+            _id: "$brandInfo._id",
+            name: "$brandInfo.name",
+            logo: "$brandInfo.logo",
+            city: "$brandInfo.address.city",
+            state: "$brandInfo.address.state",
+          },
+        },
       });
 
       // Execute aggregation and count
       const countPipeline = [...pipeline];
       // Remove skip, limit, and project stages for counting
-      const skipIndex = countPipeline.findIndex(stage => stage.$skip !== undefined);
-      const limitIndex = countPipeline.findIndex(stage => stage.$limit !== undefined);
-      const projectIndex = countPipeline.findIndex(stage => stage.$project !== undefined);
-      
+      const skipIndex = countPipeline.findIndex(
+        (stage) => stage.$skip !== undefined
+      );
+      const limitIndex = countPipeline.findIndex(
+        (stage) => stage.$limit !== undefined
+      );
+      const projectIndex = countPipeline.findIndex(
+        (stage) => stage.$project !== undefined
+      );
+
       if (projectIndex !== -1) countPipeline.splice(projectIndex, 1);
       if (limitIndex !== -1) countPipeline.splice(limitIndex, 1);
       if (skipIndex !== -1) countPipeline.splice(skipIndex, 1);
-      
+
       const [classes, totalCountResult] = await Promise.all([
         Class.aggregate(pipeline),
-        Class.aggregate([
-          ...countPipeline,
-          { $count: 'total' }
-        ])
+        Class.aggregate([...countPipeline, { $count: "total" }]),
       ]);
 
       const totalCount = totalCountResult[0]?.total || 0;
@@ -464,20 +479,19 @@ class DiscoveryController {
             totalCount,
             limit,
             hasNextPage,
-            hasPrevPage
-          }
+            hasPrevPage,
+          },
         },
-        message: 'Classes retrieved successfully'
+        message: "Classes retrieved successfully",
       });
-
     } catch (error) {
-      console.error('Get classes error:', error);
+      console.error("Get classes error:", error);
       res.status(500).json({
         success: false,
         error: {
-          code: 'SERVER_001',
-          message: 'Internal server error'
-        }
+          code: "SERVER_001",
+          message: "Internal server error",
+        },
       });
     }
   }
@@ -490,22 +504,22 @@ class DiscoveryController {
   public static async getSessions(req: Request, res: Response): Promise<void> {
     try {
       // Validate query parameters
-      const { error, value } = sessionDiscoverySchema.validate(req.query, { 
+      const { error, value } = sessionDiscoverySchema.validate(req.query, {
         abortEarly: false,
-        stripUnknown: true 
+        stripUnknown: true,
       });
 
       if (error) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'VALIDATION_001',
-            message: 'Invalid query parameters',
-            details: error.details.map(detail => ({
-              field: detail.path.join('.'),
-              message: detail.message
-            }))
-          }
+            code: "VALIDATION_001",
+            message: "Invalid query parameters",
+            details: error.details.map((detail) => ({
+              field: detail.path.join("."),
+              message: detail.message,
+            })),
+          },
         });
         return;
       }
@@ -515,65 +529,67 @@ class DiscoveryController {
       // Build aggregation pipeline
       const pipeline: any[] = [
         // Match scheduled sessions in the future
-        { 
-          $match: { 
-            status: 'scheduled',
-            dateTime: { $gt: new Date() }
-          } 
+        {
+          $match: {
+            status: "scheduled",
+            dateTime: { $gt: new Date() },
+          },
         },
-        
+
         // Lookup class information
         {
           $lookup: {
-            from: 'classes',
-            localField: 'class',
-            foreignField: '_id',
-            as: 'classInfo',
-            pipeline: [
-              { $match: { status: 'active' } }
-            ]
-          }
+            from: "classes",
+            localField: "class",
+            foreignField: "_id",
+            as: "classInfo",
+            pipeline: [{ $match: { status: "active" } }],
+          },
         },
-        
+
         // Ensure class exists and is active
         { $match: { classInfo: { $ne: [] } } },
-        
+
         // Unwind class info
-        { $unwind: '$classInfo' },
-        
+        { $unwind: "$classInfo" },
+
         // Lookup brand information
         {
           $lookup: {
-            from: 'brands',
-            localField: 'classInfo.brand',
-            foreignField: '_id',
-            as: 'brandInfo',
+            from: "brands",
+            localField: "classInfo.brand",
+            foreignField: "_id",
+            as: "brandInfo",
             pipeline: [
-              { $match: { status: 'active' } },
-              { $project: { name: 1, address: 1, logo: 1 } }
-            ]
-          }
+              { $match: { status: "active" } },
+              { $project: { name: 1, address: 1, logo: 1 } },
+            ],
+          },
         },
-        
+
         // Ensure brand exists and is active
         { $match: { brandInfo: { $ne: [] } } },
-        
+
         // Unwind brand info
-        { $unwind: '$brandInfo' },
-        
+        { $unwind: "$brandInfo" },
+
         // Add available spots calculation
         {
           $addFields: {
-            availableSpots: { $subtract: ['$capacity', { $size: '$attendees' }] }
-          }
-        }
+            availableSpots: {
+              $subtract: ["$capacity", { $size: "$attendees" }],
+            },
+          },
+        },
       ];
 
       // Add filters
       const matchConditions: any = {};
 
       if (queryParams.brand) {
-        matchConditions['classInfo.brand'] = new mongoose.Types.ObjectId(queryParams.brand);
+        matchConditions["classInfo.brand"] = new mongoose.Types.ObjectId(
+          queryParams.brand
+        );
       }
 
       if (queryParams.class) {
@@ -581,11 +597,11 @@ class DiscoveryController {
       }
 
       if (queryParams.category) {
-        matchConditions['classInfo.category'] = queryParams.category;
+        matchConditions["classInfo.category"] = queryParams.category;
       }
 
       if (queryParams.difficulty) {
-        matchConditions['classInfo.difficulty'] = queryParams.difficulty;
+        matchConditions["classInfo.difficulty"] = queryParams.difficulty;
       }
 
       if (queryParams.startDate || queryParams.endDate) {
@@ -605,19 +621,32 @@ class DiscoveryController {
       }
 
       if (queryParams.city) {
-        matchConditions['brandInfo.address.city'] = { $regex: queryParams.city, $options: 'i' };
+        matchConditions["brandInfo.address.city"] = {
+          $regex: queryParams.city,
+          $options: "i",
+        };
       }
 
       if (queryParams.state) {
-        matchConditions['brandInfo.address.state'] = { $regex: queryParams.state, $options: 'i' };
+        matchConditions["brandInfo.address.state"] = {
+          $regex: queryParams.state,
+          $options: "i",
+        };
       }
 
       if (queryParams.search) {
         matchConditions.$or = [
-          { 'classInfo.name': { $regex: queryParams.search, $options: 'i' } },
-          { 'classInfo.description': { $regex: queryParams.search, $options: 'i' } },
-          { 'classInfo.category': { $regex: queryParams.search, $options: 'i' } },
-          { 'brandInfo.name': { $regex: queryParams.search, $options: 'i' } }
+          { "classInfo.name": { $regex: queryParams.search, $options: "i" } },
+          {
+            "classInfo.description": {
+              $regex: queryParams.search,
+              $options: "i",
+            },
+          },
+          {
+            "classInfo.category": { $regex: queryParams.search, $options: "i" },
+          },
+          { "brandInfo.name": { $regex: queryParams.search, $options: "i" } },
         ];
       }
 
@@ -626,8 +655,8 @@ class DiscoveryController {
       }
 
       // Add sorting
-      const sortField = queryParams.sortBy || 'dateTime';
-      const sortOrder = queryParams.sortOrder === 'desc' ? -1 : 1;
+      const sortField = queryParams.sortBy || "dateTime";
+      const sortOrder = queryParams.sortOrder === "desc" ? -1 : 1;
       pipeline.push({ $sort: { [sortField]: sortOrder } });
 
       // Calculate pagination
@@ -648,41 +677,44 @@ class DiscoveryController {
           status: 1,
           createdAt: 1,
           class: {
-            _id: '$classInfo._id',
-            name: '$classInfo.name',
-            description: '$classInfo.description',
-            category: '$classInfo.category',
-            difficulty: '$classInfo.difficulty',
-            duration: '$classInfo.duration',
-            cancellationPolicy: '$classInfo.cancellationPolicy'
+            _id: "$classInfo._id",
+            name: "$classInfo.name",
+            description: "$classInfo.description",
+            category: "$classInfo.category",
+            difficulty: "$classInfo.difficulty",
+            duration: "$classInfo.duration",
+            cancellationPolicy: "$classInfo.cancellationPolicy",
           },
           brand: {
-            _id: '$brandInfo._id',
-            name: '$brandInfo.name',
-            logo: '$brandInfo.logo',
-            city: '$brandInfo.address.city',
-            state: '$brandInfo.address.state'
-          }
-        }
+            _id: "$brandInfo._id",
+            name: "$brandInfo.name",
+            logo: "$brandInfo.logo",
+            city: "$brandInfo.address.city",
+            state: "$brandInfo.address.state",
+          },
+        },
       });
 
       // Execute aggregation and count
       const countPipeline = [...pipeline];
       // Remove skip, limit, and project stages for counting
-      const skipIndex = countPipeline.findIndex(stage => stage.$skip !== undefined);
-      const limitIndex = countPipeline.findIndex(stage => stage.$limit !== undefined);
-      const projectIndex = countPipeline.findIndex(stage => stage.$project !== undefined);
-      
+      const skipIndex = countPipeline.findIndex(
+        (stage) => stage.$skip !== undefined
+      );
+      const limitIndex = countPipeline.findIndex(
+        (stage) => stage.$limit !== undefined
+      );
+      const projectIndex = countPipeline.findIndex(
+        (stage) => stage.$project !== undefined
+      );
+
       if (projectIndex !== -1) countPipeline.splice(projectIndex, 1);
       if (limitIndex !== -1) countPipeline.splice(limitIndex, 1);
       if (skipIndex !== -1) countPipeline.splice(skipIndex, 1);
-      
+
       const [sessions, totalCountResult] = await Promise.all([
         Session.aggregate(pipeline),
-        Session.aggregate([
-          ...countPipeline,
-          { $count: 'total' }
-        ])
+        Session.aggregate([...countPipeline, { $count: "total" }]),
       ]);
 
       const totalCount = totalCountResult[0]?.total || 0;
@@ -702,20 +734,19 @@ class DiscoveryController {
             totalCount,
             limit,
             hasNextPage,
-            hasPrevPage
-          }
+            hasPrevPage,
+          },
         },
-        message: 'Sessions retrieved successfully'
+        message: "Sessions retrieved successfully",
       });
-
     } catch (error) {
-      console.error('Get sessions error:', error);
+      console.error("Get sessions error:", error);
       res.status(500).json({
         success: false,
         error: {
-          code: 'SERVER_001',
-          message: 'Internal server error'
-        }
+          code: "SERVER_001",
+          message: "Internal server error",
+        },
       });
     }
   }
@@ -724,25 +755,29 @@ class DiscoveryController {
    * Get available subscription plans for a specific brand
    * Requirements: 8.6 - WHEN a client views subscription plans THEN the system SHALL display active plans with pricing and features
    */
-  public static async getBrandSubscriptionPlans(req: Request, res: Response): Promise<void> {
+  public static async getBrandSubscriptionPlans(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       // Validate brand ID parameter
-      const { error: paramError, value: paramValue } = brandIdParamSchema.validate(req.params, { 
-        abortEarly: false,
-        stripUnknown: true 
-      });
+      const { error: paramError, value: paramValue } =
+        brandIdParamSchema.validate(req.params, {
+          abortEarly: false,
+          stripUnknown: true,
+        });
 
       if (paramError) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'VALIDATION_001',
-            message: 'Invalid brand ID',
-            details: paramError.details.map(detail => ({
-              field: detail.path.join('.'),
-              message: detail.message
-            }))
-          }
+            code: "VALIDATION_001",
+            message: "Invalid brand ID",
+            details: paramError.details.map((detail) => ({
+              field: detail.path.join("."),
+              message: detail.message,
+            })),
+          },
         });
         return;
       }
@@ -750,40 +785,44 @@ class DiscoveryController {
       const { brandId } = paramValue;
 
       // Verify brand exists and is active
-      const brand = await Brand.findOne({ 
-        _id: brandId, 
-        status: 'active' 
-      }).select('name').lean();
+      const brand = await Brand.findOne({
+        _id: brandId,
+        status: "active",
+      })
+        .select("name")
+        .lean();
 
       if (!brand) {
         res.status(404).json({
           success: false,
           error: {
-            code: 'BRAND_001',
-            message: 'Brand not found or inactive'
-          }
+            code: "BRAND_001",
+            message: "Brand not found or inactive",
+          },
         });
         return;
       }
 
       // Get active subscription plans for this brand
-      const subscriptionPlans = await SubscriptionPlan.find({ 
-        brand: brandId, 
-        status: 'active' 
+      const subscriptionPlans = await SubscriptionPlan.find({
+        brand: brandId,
+        status: "active",
       })
-      .populate('includedClasses', 'name category difficulty')
-      .select('name description price billingCycle frequencyLimit includedClasses')
-      .sort({ price: 1 })
-      .lean();
+        .populate("includedClasses", "name category difficulty")
+        .select(
+          "name description price billingCycle frequencyLimit includedClasses"
+        )
+        .sort({ price: 1 })
+        .lean();
 
       res.status(200).json({
         success: true,
         data: {
           brand: {
             _id: brand._id,
-            name: brand.name
+            name: brand.name,
           },
-          subscriptionPlans: subscriptionPlans.map(plan => ({
+          subscriptionPlans: subscriptionPlans.map((plan) => ({
             _id: plan._id,
             name: plan.name,
             description: plan.description,
@@ -792,21 +831,22 @@ class DiscoveryController {
             billingCycle: plan.billingCycle,
             frequencyLimit: plan.frequencyLimit,
             includedClasses: plan.includedClasses,
-            isUnlimited: Array.isArray(plan.includedClasses) && plan.includedClasses.length === 0,
-            isUnlimitedFrequency: plan.frequencyLimit.count === 0
-          }))
+            isUnlimited:
+              Array.isArray(plan.includedClasses) &&
+              plan.includedClasses.length === 0,
+            isUnlimitedFrequency: plan.frequencyLimit.count === 0,
+          })),
         },
-        message: 'Subscription plans retrieved successfully'
+        message: "Subscription plans retrieved successfully",
       });
-
     } catch (error) {
-      console.error('Get brand subscription plans error:', error);
+      console.error("Get brand subscription plans error:", error);
       res.status(500).json({
         success: false,
         error: {
-          code: 'SERVER_001',
-          message: 'Internal server error'
-        }
+          code: "SERVER_001",
+          message: "Internal server error",
+        },
       });
     }
   }
@@ -815,25 +855,29 @@ class DiscoveryController {
    * Get available credit plans for a specific brand
    * Requirements: 8.7 - WHEN a client views credit plans THEN the system SHALL display active plans with pricing and credit details
    */
-  public static async getBrandCreditPlans(req: Request, res: Response): Promise<void> {
+  public static async getBrandCreditPlans(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       // Validate brand ID parameter
-      const { error: paramError, value: paramValue } = brandIdParamSchema.validate(req.params, { 
-        abortEarly: false,
-        stripUnknown: true 
-      });
+      const { error: paramError, value: paramValue } =
+        brandIdParamSchema.validate(req.params, {
+          abortEarly: false,
+          stripUnknown: true,
+        });
 
       if (paramError) {
         res.status(400).json({
           success: false,
           error: {
-            code: 'VALIDATION_001',
-            message: 'Invalid brand ID',
-            details: paramError.details.map(detail => ({
-              field: detail.path.join('.'),
-              message: detail.message
-            }))
-          }
+            code: "VALIDATION_001",
+            message: "Invalid brand ID",
+            details: paramError.details.map((detail) => ({
+              field: detail.path.join("."),
+              message: detail.message,
+            })),
+          },
         });
         return;
       }
@@ -841,40 +885,44 @@ class DiscoveryController {
       const { brandId } = paramValue;
 
       // Verify brand exists and is active
-      const brand = await Brand.findOne({ 
-        _id: brandId, 
-        status: 'active' 
-      }).select('name').lean();
+      const brand = await Brand.findOne({
+        _id: brandId,
+        status: "active",
+      })
+        .select("name")
+        .lean();
 
       if (!brand) {
         res.status(404).json({
           success: false,
           error: {
-            code: 'BRAND_001',
-            message: 'Brand not found or inactive'
-          }
+            code: "BRAND_001",
+            message: "Brand not found or inactive",
+          },
         });
         return;
       }
 
       // Get active credit plans for this brand
-      const creditPlans = await CreditPlan.find({ 
-        brand: brandId, 
-        status: 'active' 
+      const creditPlans = await CreditPlan.find({
+        brand: brandId,
+        status: "active",
       })
-      .populate('includedClasses', 'name category difficulty')
-      .select('name description price creditAmount validityPeriod bonusCredits includedClasses')
-      .sort({ price: 1 })
-      .lean();
+        .populate("includedClasses", "name category difficulty")
+        .select(
+          "name description price creditAmount validityPeriod bonusCredits includedClasses"
+        )
+        .sort({ price: 1 })
+        .lean();
 
       res.status(200).json({
         success: true,
         data: {
           brand: {
             _id: brand._id,
-            name: brand.name
+            name: brand.name,
           },
-          creditPlans: creditPlans.map(plan => ({
+          creditPlans: creditPlans.map((plan) => ({
             _id: plan._id,
             name: plan.name,
             description: plan.description,
@@ -885,23 +933,30 @@ class DiscoveryController {
             totalCredits: plan.creditAmount + plan.bonusCredits,
             validityPeriod: plan.validityPeriod,
             validityDescription: `${plan.validityPeriod} days`,
-            pricePerCredit: Math.round(plan.price / (plan.creditAmount + plan.bonusCredits)),
-            pricePerCreditFormatted: `$${(plan.price / (plan.creditAmount + plan.bonusCredits) / 100).toFixed(2)}`,
+            pricePerCredit: Math.round(
+              plan.price / (plan.creditAmount + plan.bonusCredits)
+            ),
+            pricePerCreditFormatted: `$${(
+              plan.price /
+              (plan.creditAmount + plan.bonusCredits) /
+              100
+            ).toFixed(2)}`,
             includedClasses: plan.includedClasses,
-            isUnlimited: Array.isArray(plan.includedClasses) && plan.includedClasses.length === 0
-          }))
+            isUnlimited:
+              Array.isArray(plan.includedClasses) &&
+              plan.includedClasses.length === 0,
+          })),
         },
-        message: 'Credit plans retrieved successfully'
+        message: "Credit plans retrieved successfully",
       });
-
     } catch (error) {
-      console.error('Get brand credit plans error:', error);
+      console.error("Get brand credit plans error:", error);
       res.status(500).json({
         success: false,
         error: {
-          code: 'SERVER_001',
-          message: 'Internal server error'
-        }
+          code: "SERVER_001",
+          message: "Internal server error",
+        },
       });
     }
   }

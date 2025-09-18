@@ -8,6 +8,8 @@ import creditPlanRoutes from './creditPlanRoutes';
 import stripeRoutes from './stripeRoutes';
 import clientAuthRoutes from './clientAuth';
 import clientProfileRoutes from './clientProfile';
+import clientSubscriptionRoutes from './clientSubscriptionRoutes';
+import clientCreditRoutes from './clientCreditRoutes';
 import discoveryRoutes from './discoveryRoutes';
 import paymentRoutes from './paymentRoutes';
 
@@ -27,6 +29,8 @@ router.use('/brand/stripe', stripeRoutes);
 
 // Client routes
 router.use('/client', clientProfileRoutes);
+router.use('/client/subscriptions', clientSubscriptionRoutes);
+router.use('/client/credits', clientCreditRoutes);
 router.use('/client/discovery', discoveryRoutes);
 router.use('/client/payments', paymentRoutes);
 

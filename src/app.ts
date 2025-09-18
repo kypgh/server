@@ -40,6 +40,11 @@ class App {
   }
 
   private initializeRoutes(): void {
+    // Handle Next.js HMR requests silently (prevents 404 spam in logs)
+    this.app.get('/_next/*', (req, res) => {
+      res.status(204).end(); // No content response
+    });
+
     // API routes will be added here in future tasks
     this.app.get('/api', (req, res) => {
       res.status(200).json({
